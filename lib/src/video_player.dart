@@ -6,7 +6,7 @@ import 'package:better_player/src/video_player/video_player_platform_interface.d
 abstract class VideoPlayer {
   const VideoPlayer();
 
-  String get src;
+  String? get src;
   Stream<VideoEvent> get events;
 
   void registerElement(int textureId);
@@ -14,6 +14,12 @@ abstract class VideoPlayer {
   Future<void> initialize();
 
   Future<void> play();
+
+  Future<void> setDataSource(DataSource dataSource);
+
+  Future<void> setTrackParameters(int? width, int? height, int? bitrate);
+
+  Future<DateTime?> getAbsolutePosition();
 
   void pause();
 

@@ -1,13 +1,15 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:html' as html;
 import 'dart:js_util';
 
 import 'package:better_player/better_player.dart';
+import 'shims/dart_ui.dart' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 // ignore: implementation_imports
 import 'package:better_player/src/video_player/video_player_platform_interface.dart';
-import 'shaka.dart' as shaka;
+import 'shaka/shaka.dart' as shaka;
 import 'utils.dart';
 import 'video_element_player.dart';
 
@@ -19,19 +21,19 @@ const String _kShakaScriptUrl = kReleaseMode
 
 class ShakaVideoPlayer extends VideoElementPlayer {
   ShakaVideoPlayer({
-    required String src,
     required String key,
-    BetterPlayerDrmConfiguration? drmConfiguration,
     bool withCredentials = false,
     @visibleForTesting StreamController<VideoEvent>? eventController,
-  })  : _drmConfiguration = drmConfiguration,
-        _withCredentials = withCredentials,
-        super(src: src, eventController: eventController, key: key);
+  })  : _withCredentials = withCredentials,
+        super(eventController: eventController, key: key);
 
   late shaka.Player _player;
 
-  final BetterPlayerDrmConfiguration? _drmConfiguration;
+  BetterPlayerDrmConfiguration? _drmConfiguration;
   final bool _withCredentials;
+
+  @override
+  String? src;
 
   bool get _hasDrm => _drmConfiguration != null;
 
@@ -41,6 +43,34 @@ class ShakaVideoPlayer extends VideoElementPlayer {
     }
 
     return '';
+  }
+
+  setDataSource(DataSource dataSource) async {
+    switch (dataSource.sourceType) {
+      case DataSourceType.network:
+        // Do NOT modify the incoming uri, it can be a Blob, and Safari doesn't
+        // like blobs that have changed.
+        src = dataSource.uri ?? '';
+        break;
+      case DataSourceType.asset:
+        String assetUrl = dataSource.asset!;
+        if (dataSource.package != null && dataSource.package!.isNotEmpty) {
+          assetUrl = 'packages/${dataSource.package}/$assetUrl';
+        }
+        assetUrl = ui.webOnlyAssetManager.getAssetUrl(assetUrl);
+        src = assetUrl;
+        break;
+      case DataSourceType.file:
+        throw UnimplementedError(
+            'web implementation of video_player cannot play local files');
+    }
+    _drmConfiguration = BetterPlayerDrmConfiguration(
+      certificateUrl: dataSource.certificateUrl,
+      clearKey: dataSource.clearKey,
+      drmType: BetterPlayerDrmType.widevine,
+      headers: dataSource.drmHeaders,
+      licenseUrl: dataSource.licenseUrl,
+    );
   }
 
   @override
@@ -62,6 +92,8 @@ class ShakaVideoPlayer extends VideoElementPlayer {
         code: ex.type,
         message: 'Error loading Shaka Player: $_kShakaScriptUrl',
       ));
+    } catch (e) {
+      throw ErrorDescription(e.toString());
     }
   }
 
@@ -81,7 +113,11 @@ class ShakaVideoPlayer extends VideoElementPlayer {
     // Allows Safari iOS to play the video inline
     videoElement.setAttribute('playsinline', 'true');
 
-    shaka.installPolyfills();
+    try {
+      shaka.installPolyfills();
+    } catch (e) {
+      inspect(e);
+    }
 
     if (shaka.Player.isBrowserSupported()) {
       _player = shaka.Player(videoElement);
@@ -89,15 +125,15 @@ class ShakaVideoPlayer extends VideoElementPlayer {
       setupListeners();
 
       try {
-        if (_hasDrm) {
-          _player.configure(
-            jsify({
-              "drm": {
-                "servers": {_drmServer: _drmConfiguration?.licenseUrl!}
-              }
-            }),
-          );
-        }
+        // if (_hasDrm) {
+        //   _player.configure(
+        //     jsify({
+        //       "drm": {
+        //         "servers": {_drmServer: _drmConfiguration?.licenseUrl!}
+        //       }
+        //     }),
+        //   );
+        // }
 
         _player
             .getNetworkingEngine()
@@ -111,7 +147,7 @@ class ShakaVideoPlayer extends VideoElementPlayer {
           }
         }));
 
-        await promiseToFuture(_player.load(src));
+        await promiseToFuture(_player.load(src!));
       } on shaka.Error catch (ex) {
         _onShakaPlayerError(ex);
       }
@@ -145,5 +181,16 @@ class ShakaVideoPlayer extends VideoElementPlayer {
   void dispose() {
     _player.destroy();
     super.dispose();
+  }
+
+  @override
+  Future<void> setTrackParameters(int? width, int? height, int? bitrate) async {
+    videoElement.width = width ?? 350;
+    videoElement.height = height ?? 250;
+  }
+
+  @override
+  Future<DateTime?> getAbsolutePosition() async {
+    return DateTime.fromMillisecondsSinceEpoch(videoElement.duration.toInt());
   }
 }

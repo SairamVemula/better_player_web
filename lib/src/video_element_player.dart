@@ -36,14 +36,14 @@ const String _kDefaultErrorMessage =
 abstract class VideoElementPlayer implements VideoPlayer {
   /// Create a [VideoElementPlayer] from a [html.VideoElement] instance.
   VideoElementPlayer({
-    required String src,
+    String? src,
     required String key,
     StreamController<VideoEvent>? eventController,
   })  : _src = src,
         _key = key,
         _eventController = eventController ?? StreamController<VideoEvent>();
 
-  final String _src;
+  String? _src;
   final String _key;
   final StreamController<VideoEvent> _eventController;
   late html.VideoElement _videoElement;
@@ -54,7 +54,7 @@ abstract class VideoElementPlayer implements VideoPlayer {
   bool get isInitialized => _isInitialized;
 
   @override
-  String get src => _src;
+  String? get src => _src;
 
   StreamController<VideoEvent> get eventController => _eventController;
   html.VideoElement get videoElement => _videoElement;

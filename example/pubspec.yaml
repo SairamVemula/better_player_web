@@ -16,6 +16,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  path_provider: ^2.0.10
+  visibility_detector: ^0.3.3
+  collection: ^1.16.0
+  better_player:
+    path: ../../betterplayer
 
   better_player_web:
     # When depending on this package from a real application you should use:
@@ -47,10 +54,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
+  assets:
+    - assets/
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
