@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:html' as html;
 
 import 'package:better_player_web/src/video_player.dart';
@@ -124,18 +125,19 @@ abstract class VideoElementPlayer implements VideoPlayer {
   /// limitation should disappear.
   @override
   Future<void> play() {
-    return videoElement.play().catchError((Object e) {
-      // play() attempts to begin playback of the media. It returns
-      // a Promise which can get rejected in case of failure to begin
-      // playback for any reason, such as permission issues.
-      // The rejection handler is called with a DomException.
-      // See: https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/play
-      final html.DomException exception = e as html.DomException;
-      _eventController.addError(PlatformException(
-        code: exception.name,
-        message: exception.message,
-      ));
-    }, test: (Object e) => e is html.DomException);
+    return videoElement.play();
+    // .catchError((Object e) {
+    //   // play() attempts to begin playback of the media. It returns
+    //   // a Promise which can get rejected in case of failure to begin
+    //   // playback for any reason, such as permission issues.
+    //   // The rejection handler is called with a DomException.
+    //   // See: https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/play
+    //   final html.DomException exception = e as html.DomException;
+    //   _eventController.addError(PlatformException(
+    //     code: exception.name,
+    //     message: exception.message,
+    //   ));
+    // }, test: (Object e) => e is html.DomException);
   }
 
   /// Pauses the video in the current position.

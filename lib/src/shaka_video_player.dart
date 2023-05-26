@@ -16,8 +16,8 @@ import 'video_element_player.dart';
 const String _kMuxScriptUrl =
     'https://cdnjs.cloudflare.com/ajax/libs/mux.js/5.10.0/mux.min.js';
 const String _kShakaScriptUrl = kReleaseMode
-    ? 'https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.1.0/shaka-player.compiled.min.js'
-    : 'https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.1.0/shaka-player.compiled.debug.js';
+    ? 'https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/shaka-player.compiled.js'
+    : 'https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/shaka-player.compiled.debug.js';
 
 class ShakaVideoPlayer extends VideoElementPlayer {
   ShakaVideoPlayer({
@@ -35,14 +35,21 @@ class ShakaVideoPlayer extends VideoElementPlayer {
   @override
   String? src;
 
-  bool get _hasDrm => _drmConfiguration != null;
+  bool get _hasDrm =>
+      _drmConfiguration?.certificateUrl != null ||
+      _drmConfiguration?.licenseUrl != null;
 
   String get _drmServer {
-    if (_drmConfiguration?.drmType == BetterPlayerDrmType.widevine) {
-      return 'com.widevine.alpha';
+    switch (_drmConfiguration?.drmType) {
+      case BetterPlayerDrmType.widevine:
+        return 'com.widevine.alpha';
+      case BetterPlayerDrmType.playready:
+        return 'com.microsoft.playready';
+      case BetterPlayerDrmType.clearKey:
+        return 'org.w3.clearkey';
+      default:
+        return '';
     }
-
-    return '';
   }
 
   setDataSource(DataSource dataSource) async {
@@ -67,7 +74,7 @@ class ShakaVideoPlayer extends VideoElementPlayer {
     _drmConfiguration = BetterPlayerDrmConfiguration(
       certificateUrl: dataSource.certificateUrl,
       clearKey: dataSource.clearKey,
-      drmType: BetterPlayerDrmType.widevine,
+      drmType: dataSource.drmType,
       headers: dataSource.drmHeaders,
       licenseUrl: dataSource.licenseUrl,
     );
@@ -76,7 +83,7 @@ class ShakaVideoPlayer extends VideoElementPlayer {
   @override
   html.VideoElement createElement(int textureId) {
     return html.VideoElement()
-      ..id = 'videoPlayer-$textureId'
+      ..id = 'shakaVideoPlayer-$textureId'
       ..style.border = 'none'
       ..style.height = '100%'
       ..style.width = '100%';
@@ -125,15 +132,17 @@ class ShakaVideoPlayer extends VideoElementPlayer {
       setupListeners();
 
       try {
-        // if (_hasDrm) {
-        //   _player.configure(
-        //     jsify({
-        //       "drm": {
-        //         "servers": {_drmServer: _drmConfiguration?.licenseUrl!}
-        //       }
-        //     }),
-        //   );
-        // }
+        if (_hasDrm) {
+          if (_drmConfiguration?.licenseUrl?.isNotEmpty ?? false) {
+            _player.configure(
+              jsify({
+                "drm": {
+                  "servers": {_drmServer: _drmConfiguration?.licenseUrl!}
+                }
+              }),
+            );
+          }
+        }
 
         _player
             .getNetworkingEngine()

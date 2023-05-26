@@ -121,7 +121,7 @@ class BetterPlayerPlugin extends VideoPlayerPlatform {
 
   @override
   Widget buildView(int? textureId) {
-    return HtmlElementView(viewType: 'videoPlayer-$textureId');
+    return HtmlElementView(viewType: 'shakaVideoPlayer-$textureId');
   }
 
   /// Sets the audio mode to mix with other sources (ignored)

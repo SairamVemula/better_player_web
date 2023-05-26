@@ -1,6 +1,6 @@
 import 'dart:async';
 
-// ignore: implementation_imports
+// ignore: implementation_imports, depend_on_referenced_packages
 import 'package:better_player/src/video_player/video_player_platform_interface.dart';
 
 abstract class VideoPlayer {
