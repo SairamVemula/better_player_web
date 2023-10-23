@@ -13,6 +13,7 @@ import 'package:better_player_web_example/pages/dash_page.dart';
 import 'package:better_player_web_example/pages/drm_page.dart';
 import 'package:better_player_web_example/pages/event_listener_page.dart';
 import 'package:better_player_web_example/pages/fade_placeholder_page.dart';
+import 'package:better_player_web_example/pages/gif_renderer.dart';
 import 'package:better_player_web_example/pages/hls_audio_page.dart';
 import 'package:better_player_web_example/pages/hls_subtitles_page.dart';
 import 'package:better_player_web_example/pages/hls_tracks_page.dart';
@@ -78,6 +79,9 @@ class _WelcomePageState extends State<WelcomePage> {
 
   List<Widget> buildExampleElementWidgets() {
     return [
+      _buildExampleElementWidget("Gif Renderer", () {
+        _navigateToPage(GifRenderer());
+      }),
       _buildExampleElementWidget("Basic player", () {
         _navigateToPage(BasicPlayerPage());
       }),

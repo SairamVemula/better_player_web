@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -27,7 +28,7 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png" />
 
   <title>better_player_web_example</title>
   <link rel="manifest" href="manifest.json">
@@ -37,25 +38,85 @@
     var serviceWorkerVersion = null;
   </script>
   <!-- This script adds the flutter initialization JS code -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/shaka-player.compiled.js" integrity="sha512-0EIXkpwZdEOMkzFncCxXMFlYC/RhHbf3Qxs3EXq3510l6ImA5yhD+Zq1OonrDV2r1ZKwqLpT7CRB2+o1VLclFA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mux.js/5.10.0/mux.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.4.2/shaka-player.compiled.debug.min.js"
+    integrity="sha512-r/uC3uz+T1e6GKgXK4xYjZEMaN9kuJMcvFsC1Fh88TpVzD5wYlmXlxSeX+CVARUEXrf+oPUql/II1P0+A9qSnQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mux.js/6.1.0/mux.min.js"
+    integrity="sha512-k3XrWalAyHskIbwRpGSuYoT6sdJRmCCpTgJ4HVND12rWc8Ffd3W2qMEo3ZebejIehGxMxRhKyZOBPMWLZ0pUeg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="flutter.js" defer></script>
 </head>
+
 <body>
   <script>
-    window.addEventListener('load', function(ev) {
+    window.addEventListener('load', function (ev) {
       // Download main.dart.js
       _flutter.loader.loadEntrypoint({
         serviceWorker: {
           serviceWorkerVersion: serviceWorkerVersion,
         },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
+        onEntrypointLoaded: function (engineInitializer) {
+          engineInitializer.initializeEngine().then(function (appRunner) {
             appRunner.runApp();
           });
         }
       });
     });
+
+
+    function showErrorEventHandler(event) {
+      showError(event.detail);
+    }
+    function showLoadSuccess() {
+      console.log('Player loaded successfully');
+    }
+    function showError(error) {
+      let message = 'see console';
+      if (error.message && error.message.match) {
+        let matches = error.message.match(/[^Shaka Error].+?(?=\()/);
+        if (matches) {
+          message = matches[0].replace(/\./g, ' ').replace(/_/g, ' ');
+        }
+      }
+      console.error('https://shaka-player-demo.appspot.com/docs/api/shaka.util.Error.html#value:' + error.code);
+      console.error(error);
+      alert('ERROR - ' + error.code + ': ' + message);
+    }
+    function requestFilter(type, request) {
+      console.log('request filter before license check', type, request);
+      console.log(shaka.net.NetworkingEngine.RequestType);
+      if (type !== shaka.net.NetworkingEngine.RequestType.LICENSE) {
+        return;
+      }
+
+      const originalPayload = new Uint8Array(request.body);
+      const base64Payload = shaka.util.Uint8ArrayUtils.toBase64(originalPayload);
+      request.headers['Content-Type'] = 'application/json';
+      request.body = '{"spc": "' + base64Payload + '"}';
+      console.log('request filter after license check');
+    }
+
+    function responseFilter(type, response) {
+      console.log('response filter before license check', type, response);
+      if (type != shaka.net.NetworkingEngine.RequestType.LICENSE) {
+        return;
+      }
+
+      let responseText = shaka.util.StringUtils.fromUTF8(response.data);
+      // Trim whitespace.
+      responseText = responseText.trim();
+
+      // Look for <ckc> wrapper and remove it.
+      if (responseText.substr(0, 5) === '<ckc>' &&
+        responseText.substr(-6) === '</ckc>') {
+        responseText = responseText.slice(5, -6);
+      }
+
+      // Decode the base64-encoded data into the format the browser expects.
+      response.data = shaka.util.Uint8ArrayUtils.fromBase64(responseText).buffer;
+      console.log('response filter before license check', responseText);
+    }
   </script>
 </body>
+
 </html>

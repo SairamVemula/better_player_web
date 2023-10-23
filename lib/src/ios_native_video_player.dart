@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:html' as html;
+import 'shims/dart_ui.dart' as ui;
 
+import 'package:better_player_web/src/video_element_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // ignore: implementation_imports
@@ -30,22 +32,22 @@ const String _kDefaultErrorMessage =
     'No further diagnostic information can be determined or provided.';
 
 /// Wraps a [html.VideoElement] so its API complies with what is expected by the plugin.
-class VideoPlayer {
-  /// Create a [VideoPlayer] from a [html.VideoElement] instance.
-  VideoPlayer({
-    required html.VideoElement videoElement,
+class IOSNativeVideoPlayer extends VideoElementPlayer {
+  /// Create a [IOSNativeVideoPlayer] from a [html.VideoElement] instance.
+  IOSNativeVideoPlayer({
     required String key,
     @visibleForTesting StreamController<VideoEvent>? eventController,
-  })  : _videoElement = videoElement,
-        _key = key,
-        _eventController = eventController ?? StreamController<VideoEvent>();
+  })  : _key = key,
+        _eventController = eventController ?? StreamController<VideoEvent>(),
+        super(key: key);
 
   final StreamController<VideoEvent> _eventController;
-  final html.VideoElement _videoElement;
   final String _key;
 
   bool _isInitialized = false;
   bool _isBuffering = false;
+  @override
+  String? src;
 
   /// Returns the [Stream] of [VideoEvent]s from the inner [html.VideoElement].
   Stream<VideoEvent> get events => _eventController.stream;
@@ -54,45 +56,46 @@ class VideoPlayer {
   ///
   /// This method sets the required DOM attributes so videos can [play] programmatically,
   /// and attaches listeners to the internal events from the [html.VideoElement]
-  /// to react to them / expose them through the [VideoPlayer.events] stream.
-  void initialize() {
-    _videoElement
+  /// to react to them / expose them through the [IOSNativeVideoPlayer.events] stream.
+  @override
+  Future<void> initialize() {
+    videoElement
       ..autoplay = false
       ..controls = false;
 
     // Allows Safari iOS to play the video inline
-    _videoElement.setAttribute('playsinline', 'true');
+    videoElement.setAttribute('playsinline', 'true');
 
     // Set autoplay to false since most browsers won't autoplay a video unless it is muted
-    _videoElement.setAttribute('autoplay', 'false');
+    videoElement.setAttribute('autoplay', 'false');
 
-    _videoElement.onCanPlay.listen((dynamic _) {
+    videoElement.onCanPlay.listen((dynamic _) {
       if (!_isInitialized) {
         _isInitialized = true;
         _sendInitialized();
       }
     });
 
-    _videoElement.onCanPlayThrough.listen((dynamic _) {
+    videoElement.onCanPlayThrough.listen((dynamic _) {
       setBuffering(false);
     });
 
-    _videoElement.onPlaying.listen((dynamic _) {
+    videoElement.onPlaying.listen((dynamic _) {
       setBuffering(false);
     });
 
-    _videoElement.onWaiting.listen((dynamic _) {
+    videoElement.onWaiting.listen((dynamic _) {
       setBuffering(true);
       _sendBufferingRangesUpdate();
     });
 
     // The error event fires when some form of error occurs while attempting to load or perform the media.
-    _videoElement.onError.listen((html.Event _) {
+    videoElement.onError.listen((html.Event _) {
       setBuffering(false);
       // The Event itself (_) doesn't contain info about the actual error.
       // We need to look at the HTMLMediaElement.error.
       // See: https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/error
-      final html.MediaError error = _videoElement.error!;
+      final html.MediaError error = videoElement.error!;
       _eventController.addError(PlatformException(
         code: _kErrorValueToErrorName[error.code]!,
         message: error.message != '' ? error.message : _kDefaultErrorMessage,
@@ -100,11 +103,13 @@ class VideoPlayer {
       ));
     });
 
-    _videoElement.onEnded.listen((dynamic _) {
+    videoElement.onEnded.listen((dynamic _) {
       setBuffering(false);
       _eventController
           .add(VideoEvent(eventType: VideoEventType.completed, key: _key));
     });
+
+    return Future.value();
   }
 
   /// Attempts to play the video.
@@ -114,8 +119,9 @@ class VideoPlayer {
   ///
   /// When called from some user interaction (a tap on a button), the above
   /// limitation should disappear.
+  @override
   Future<void> play() {
-    return _videoElement.play().catchError((Object e) {
+    return videoElement.play().catchError((Object e) {
       // play() attempts to begin playback of the media. It returns
       // a Promise which can get rejected in case of failure to begin
       // playback for any reason, such as permission issues.
@@ -130,14 +136,16 @@ class VideoPlayer {
   }
 
   /// Pauses the video in the current position.
+  @override
   void pause() {
-    _videoElement.pause();
+    videoElement.pause();
   }
 
   /// Controls whether the video should start again after it finishes.
   // ignore: use_setters_to_change_properties
+  @override
   void setLooping(bool value) {
-    _videoElement.loop = value;
+    videoElement.loop = value;
   }
 
   /// Sets the volume at which the media will be played.
@@ -146,13 +154,14 @@ class VideoPlayer {
   ///
   /// When volume is set to 0, the `muted` property is also applied to the
   /// [html.VideoElement]. This is required for auto-play on the web.
+  @override
   void setVolume(double volume) {
     assert(volume >= 0 && volume <= 1);
 
     // TODO(ditman): Do we need to expose a "muted" API?
     // https://github.com/flutter/flutter/issues/60721
-    _videoElement.muted = !(volume > 0.0);
-    _videoElement.volume = volume;
+    videoElement.muted = !(volume > 0.0);
+    videoElement.volume = volume;
   }
 
   /// Sets the playback `speed`.
@@ -166,45 +175,49 @@ class VideoPlayer {
   /// range (for example, Gecko mutes the sound outside the range 0.25 to 4.0).
   ///
   /// The pitch of the audio is corrected by default.
+  @override
   void setPlaybackSpeed(double speed) {
     assert(speed > 0);
 
-    _videoElement.playbackRate = speed;
+    videoElement.playbackRate = speed;
   }
 
   /// Moves the playback head to a new `position`.
   ///
   /// `position` cannot be negative.
+  @override
   void seekTo(Duration position) {
     assert(!position.isNegative);
 
-    _videoElement.currentTime = position.inMilliseconds.toDouble() / 1000;
+    videoElement.currentTime = position.inMilliseconds.toDouble() / 1000;
   }
 
   /// Returns the current playback head position as a [Duration].
+  @override
   Duration getPosition() {
     _sendBufferingRangesUpdate();
-    return Duration(milliseconds: (_videoElement.currentTime * 1000).round());
+    return Duration(milliseconds: (videoElement.currentTime * 1000).round());
   }
 
   /// Disposes of the current [html.VideoElement].
+  @override
   void dispose() {
-    _videoElement.removeAttribute('src');
-    _videoElement.load();
+    videoElement.removeAttribute('src');
+    videoElement.load();
   }
 
   // Sends an [VideoEventType.initialized] [VideoEvent] with info about the wrapped video.
   void _sendInitialized() {
-    final Duration? duration = !_videoElement.duration.isNaN
+    final Duration? duration = !videoElement.duration.isNaN
         ? Duration(
-            milliseconds: (_videoElement.duration * 1000).round(),
+            milliseconds: (videoElement.duration * 1000).round(),
           )
         : null;
 
-    final Size? size = !_videoElement.videoHeight.isNaN
+    final Size? size = !videoElement.videoHeight.isNaN
         ? Size(
-            _videoElement.videoWidth.toDouble(),
-            _videoElement.videoHeight.toDouble(),
+            videoElement.videoWidth.toDouble(),
+            videoElement.videoHeight.toDouble(),
           )
         : null;
 
@@ -239,7 +252,7 @@ class VideoPlayer {
   void _sendBufferingRangesUpdate() {
     _eventController.add(VideoEvent(
       key: _key,
-      buffered: _toDurationRange(_videoElement.buffered),
+      buffered: _toDurationRange(videoElement.buffered),
       eventType: VideoEventType.bufferingUpdate,
     ));
   }
@@ -254,5 +267,59 @@ class VideoPlayer {
       ));
     }
     return durationRange;
+  }
+
+  @override
+  html.VideoElement createElement(int textureId) {
+    return html.VideoElement()
+      ..id = 'nativeVideoPlayer-$textureId'
+      ..style.border = 'none'
+      ..style.height = '100%'
+      ..style.width = '100%';
+  }
+
+  @override
+  Future<DateTime?> getAbsolutePosition() async {
+    return DateTime.fromMillisecondsSinceEpoch(videoElement.duration.toInt());
+  }
+
+  @override
+  Future<void> setAudioTrack(String? name, int? index) {
+    // _player.selectAudioLanguage(name!);
+    return Future.value();
+  }
+
+  @override
+  setDataSource(DataSource dataSource) async {
+    switch (dataSource.sourceType) {
+      case DataSourceType.network:
+        // Do NOT modify the incoming uri, it can be a Blob, and Safari doesn't
+        // like blobs that have changed.
+        src = dataSource.uri ?? '';
+        break;
+      case DataSourceType.asset:
+        String assetUrl = dataSource.asset!;
+        if (dataSource.package != null && dataSource.package!.isNotEmpty) {
+          assetUrl = 'packages/${dataSource.package}/$assetUrl';
+        }
+        assetUrl = ui.webOnlyAssetManager.getAssetUrl(assetUrl);
+        src = assetUrl;
+        break;
+      case DataSourceType.file:
+        throw UnimplementedError(
+            'web implementation of video_player cannot play local files');
+    }
+  }
+
+  @override
+  Future<void> setSpeed(double speed) {
+    setPlaybackSpeed(speed);
+    return Future.value();
+  }
+
+  @override
+  Future<void> setTrackParameters(int? width, int? height, int? bitrate) {
+    // TODO: implement setTrackParameters
+    throw UnimplementedError();
   }
 }
