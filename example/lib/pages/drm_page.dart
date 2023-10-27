@@ -19,38 +19,36 @@ class _DrmPageState extends State<DrmPage> {
       aspectRatio: 16 / 9,
       fit: BoxFit.contain,
     );
-    // BetterPlayerDataSource _tokenDataSource = BetterPlayerDataSource(
-    //   BetterPlayerDataSourceType.network,
-    //   Constants.tokenEncodedHlsUrl,
-    //   videoFormat: BetterPlayerVideoFormat.hls,
-    //   drmConfiguration: BetterPlayerDrmConfiguration(
-    //       drmType: BetterPlayerDrmType.token,
-    //       token: Constants.tokenEncodedHlsToken),
-    // );
-    // _tokenController = BetterPlayerController(betterPlayerConfiguration);
-    // _tokenController.setupDataSource(_tokenDataSource);
+    BetterPlayerDataSource _tokenDataSource = BetterPlayerDataSource(
+      BetterPlayerDataSourceType.network,
+      Constants.tokenEncodedHlsUrl,
+      videoFormat: BetterPlayerVideoFormat.hls,
+      drmConfiguration: BetterPlayerDrmConfiguration(
+          drmType: BetterPlayerDrmType.token,
+          token: Constants.tokenEncodedHlsToken),
+    );
+    _tokenController = BetterPlayerController(betterPlayerConfiguration);
+    _tokenController.setupDataSource(_tokenDataSource);
 
-    // _widevineController = BetterPlayerController(betterPlayerConfiguration);
-    // BetterPlayerDataSource _widevineDataSource = BetterPlayerDataSource(
-    //   BetterPlayerDataSourceType.network,
-    //   Constants.widevineVideoUrl,
-    //   drmConfiguration: BetterPlayerDrmConfiguration(
-    //       drmType: BetterPlayerDrmType.widevine,
-    //       licenseUrl: Constants.widevineLicenseUrl,
-    //       headers: {"Test": "Test2"}),
-    // );
-    // _widevineController.setupDataSource(_widevineDataSource);
+    _widevineController = BetterPlayerController(betterPlayerConfiguration);
+    BetterPlayerDataSource _widevineDataSource = BetterPlayerDataSource(
+      BetterPlayerDataSourceType.network,
+      Constants.widevineVideoUrl,
+      drmConfiguration: BetterPlayerDrmConfiguration(
+          drmType: BetterPlayerDrmType.widevine,
+          licenseUrl: Constants.widevineLicenseUrl,
+          headers: {"Test": "Test2"}),
+    );
+    _widevineController.setupDataSource(_widevineDataSource);
 
     _fairplayController = BetterPlayerController(betterPlayerConfiguration);
     BetterPlayerDataSource _fairplayDataSource = BetterPlayerDataSource(
       BetterPlayerDataSourceType.network,
-      'https://itap-uploads.s3.ap-south-1.amazonaws.com/2023/09/Shameless/fps_hls/master.m3u8',
+      Constants.fairplayHlsUrl,
       drmConfiguration: BetterPlayerDrmConfiguration(
         drmType: BetterPlayerDrmType.fairplay,
-        certificateUrl:
-            'https://itap-uploads.s3.ap-south-1.amazonaws.com/fairplay.cer',
-        licenseUrl:
-            'https://license.vdocipher.com/auth/fps/eyJjb250ZW50QXV0aCI6ImV5SmpiMjUwWlc1MFNXUWlPaUkwTWpZMU1HWmxOVEEyTkdOak5qZzJNelkxTkRFMk5tVm1ObVUzT0RWa015SXNJbVY0Y0dseVpYTWlPakUyT1RZMU1ERXdNekI5Iiwic2lnbmF0dXJlIjoid0d3NUtYaHVScFBkNVVHTDoyMDIzMTAwNFQwOTE3MTAzOTJaOk1lTDlkeFN2aUp1SS1jZVI0ZHJxb004djgzU1dNWEJWTlFMQjAxSG1hN289In0=',
+        certificateUrl: Constants.fairplayCertificateUrl,
+        licenseUrl: Constants.fairplayLicenseUrl,
       ),
     );
     _fairplayController.setupDataSource(_fairplayDataSource);
