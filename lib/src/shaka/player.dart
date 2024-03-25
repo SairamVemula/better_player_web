@@ -2,9 +2,10 @@
 library shaka;
 
 import 'dart:html' as html;
+import 'dart:js_interop';
+import 'package:js/js.dart';
 
 // ignore: depend_on_referenced_packages
-import 'package:js/js.dart';
 import 'networking_engine.dart';
 
 @JS()
@@ -16,6 +17,9 @@ class Player {
   external bool configure(Object config);
   external Future<void> load(String src);
   external Future<void> destroy();
+  external void selectVariantTrack(JSObject track,
+      [bool? clearBuffer, num? safeMargin]);
+  external List getVariantTracks();
 
   external NetworkingEngine getNetworkingEngine();
 

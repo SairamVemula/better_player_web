@@ -10,9 +10,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_hls_parser: ^2.0.1
   flutter_web_plugins:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
+  flutter_shaka: 0.0.6
+    # path: ../flutter_shaka
 
 dev_dependencies:
   flutter_test:

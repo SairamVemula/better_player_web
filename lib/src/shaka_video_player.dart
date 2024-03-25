@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:html' as html;
+import 'dart:js_interop';
+import 'package:flutter_shaka/extern/extern.dart';
+import 'package:js/js.dart';
 import 'dart:js_util';
 
 import 'package:better_player/better_player.dart';
@@ -9,7 +13,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 // ignore: implementation_imports
 import 'package:better_player/src/video_player/video_player_platform_interface.dart';
-import 'shaka/shaka.dart' as shaka;
+import 'package:flutter_shaka/flutter_shaka.dart' as shaka;
 import 'utils.dart';
 import 'video_element_player.dart';
 
@@ -149,7 +153,7 @@ class ShakaVideoPlayer extends VideoElementPlayer {
             .registerRequestFilter(allowInterop((type, request) {
           request.allowCrossSiteCredentials = _withCredentials;
 
-          if (type == shaka.RequestType.license &&
+          if (type == shaka.RequestType.LICENSE &&
               _hasDrm &&
               _drmConfiguration?.headers?.isNotEmpty == true) {
             request.headers = jsify(_drmConfiguration?.headers!);
@@ -194,8 +198,35 @@ class ShakaVideoPlayer extends VideoElementPlayer {
 
   @override
   Future<void> setTrackParameters(int? width, int? height, int? bitrate) async {
-    videoElement.width = width ?? 350;
-    videoElement.height = height ?? 250;
+    final selectedTrack = _decideClosestTrack(width, height, bitrate);
+    _player.selectVariantTrack(selectedTrack);
+  }
+
+  _decideClosestTrack(int? width, int? height, int? bitrate) {
+    // try {
+    final tracks = _player
+        .getVariantTracks()
+        .map((e) => e)
+        // .toList()
+        // .map((e) => jsonDecode(e))
+        .toList();
+    // } catch (e, s) {
+    //   print(e);
+    //   print(s);
+    // }
+    dynamic closest;
+    // if (bitrate != null) {
+    //   closest = tracks.reduce((prev, curr) =>
+    //       (curr.bandwidth - bitrate) < prev.bandwidth - bitrate ? curr : prev);
+    // } else if (height != null) {
+    //   closest = tracks.reduce((prev, curr) =>
+    //       (curr.height! - height) < prev.height! - height ? curr : prev);
+    // } else if (width != null) {
+    //   closest = tracks.reduce((prev, curr) =>
+    //       (curr.height! - width) < prev.height! - width ? curr : prev);
+    // }
+    // print(tracks[0].toString());
+    return closest;
   }
 
   @override

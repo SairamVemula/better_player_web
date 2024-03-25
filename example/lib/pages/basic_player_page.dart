@@ -30,8 +30,7 @@ class _BasicPlayerPageState extends State<BasicPlayerPage> {
           AspectRatio(
             aspectRatio: 16 / 9,
             child: BetterPlayer.network(
-              // Constants.forBiggerBlazesUrl,
-              'https://d1jbjyimjjyben.cloudfront.net/dash/24052023113126291562/playlist.mpd',
+              Constants.forBiggerBlazesUrl,
             ),
           ),
           const Padding(
