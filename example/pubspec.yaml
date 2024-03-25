@@ -21,16 +21,22 @@ dependencies:
   path_provider: ^2.0.10
   visibility_detector: ^0.3.3
   collection: ^1.16.0
+  flutter_shaka: ^0.0.6
+    # path: ../../flutter_shaka
   better_player:
+    # git: 
+      # url: https://github.com/SairamVemula/betterplayer.git
+      # ref: feature/web_plugin
     path: ../../betterplayer
 
-  better_player_web:
+  # better_player_web:
+  #   git: https://github.com/SairamVemula/better_player_web.git
     # When depending on this package from a real application you should use:
     #   better_player_web: ^x.y.z
     # See https://dart.dev/tools/pub/dependencies#version-constraints
     # The example app is bundled with the plugin so we use a path dependency on
     # the parent directory to use the current plugin's version.
-    path: ../
+    # path: ../
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

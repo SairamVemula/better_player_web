@@ -13,6 +13,8 @@ abstract class VideoPlayer {
 
   Future<void> initialize();
 
+  void dispose();
+
   Future<void> play();
 
   Future<void> setDataSource(DataSource dataSource);
@@ -31,7 +33,9 @@ abstract class VideoPlayer {
 
   void seekTo(Duration position);
 
-  Duration getPosition();
+  Future<void> setSpeed(double speed);
 
-  void dispose();
+  Future<void> setAudioTrack(String? name, int? index);
+
+  Duration getPosition();
 }

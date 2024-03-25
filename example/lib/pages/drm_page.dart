@@ -66,29 +66,29 @@ class _DrmPageState extends State<DrmPage> {
         child: Column(
           children: [
             const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                "Auth token based DRM.",
-                style: TextStyle(fontSize: 16),
-              ),
-            ),
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: BetterPlayer(controller: _tokenController),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                "Widevine - license url based DRM. Works only for Android.",
-                style: TextStyle(fontSize: 16),
-              ),
-            ),
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: BetterPlayer(controller: _widevineController),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 16),
+            //   child: Text(
+            //     "Auth token based DRM.",
+            //     style: TextStyle(fontSize: 16),
+            //   ),
+            // ),
+            // AspectRatio(
+            //   aspectRatio: 16 / 9,
+            //   child: BetterPlayer(controller: _tokenController),
+            // ),
+            // const SizedBox(height: 16),
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 16),
+            //   child: Text(
+            //     "Widevine - license url based DRM. Works only for Android.",
+            //     style: TextStyle(fontSize: 16),
+            //   ),
+            // ),
+            // AspectRatio(
+            //   aspectRatio: 16 / 9,
+            //   child: BetterPlayer(controller: _widevineController),
+            // ),
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -14,18 +14,19 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
-  flutter_shaka: 0.0.6
+  flutter_shaka: ^0.0.6
     # path: ../flutter_shaka
-
+  universal_io: ^2.2.2
+  js: ^0.6.7
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
-  better_player: 
-    git: 
-      url: https://github.com/SairamVemula/betterplayer.git
-      ref: feature/web_plugin
-    # path: ../betterplayer
+  better_player:
+    # git: 
+    #   url: https://github.com/SairamVemula/betterplayer.git
+    #   ref: feature/web_plugin
+    path: ../betterplayer
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

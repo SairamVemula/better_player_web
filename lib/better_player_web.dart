@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:html' as html;
 
 import 'package:better_player/better_player.dart';
 import 'package:better_player_web/src/shaka_video_player.dart';
@@ -6,6 +7,11 @@ import 'package:better_player_web/src/video_player.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:flutter/widgets.dart';
 import 'package:better_player/src/video_player/video_player_platform_interface.dart';
+
+final regExp = RegExp(r'(iPod|iPhone|iPad)');
+final isIPhone = regExp.hasMatch(html.window.navigator.userAgent);
+bool isSafari = RegExp(r'^((?!chrome|android).)*safari', caseSensitive: false)
+    .hasMatch(html.window.navigator.userAgent);
 
 /// An implementation of [BetterPlayerPlatform] that uses method channels.
 class BetterPlayerPlugin extends VideoPlayerPlatform {
@@ -97,6 +103,28 @@ class BetterPlayerPlugin extends VideoPlayerPlatform {
   @override
   Future<void> seekTo(int? textureId, Duration? position) async {
     return _player(textureId!).seekTo(position!);
+  }
+
+  @override
+  Future<void> setSpeed(int? textureId, double speed) async {
+    return _player(textureId!).setSpeed(speed);
+  }
+
+  Future<void> enablePictureInPicture(int? textureId, double? top, double? left,
+      double? width, double? height) {
+    throw UnimplementedError();
+  }
+
+  Future<void> disablePictureInPicture(int? textureId) {
+    throw UnimplementedError();
+  }
+
+  Future<bool?> isPictureInPictureEnabled(int? textureId) {
+    throw UnimplementedError();
+  }
+
+  Future<void> setAudioTrack(int? textureId, String? name, int? index) {
+    throw UnimplementedError();
   }
 
   @override

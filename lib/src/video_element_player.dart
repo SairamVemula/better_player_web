@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:html' as html;
 
+import 'package:better_player_web/better_player_web.dart';
 import 'package:better_player_web/src/video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -59,6 +60,7 @@ abstract class VideoElementPlayer implements VideoPlayer {
 
   StreamController<VideoEvent> get eventController => _eventController;
   html.VideoElement get videoElement => _videoElement;
+  set videoElement(e) => _videoElement = e;
 
   /// Returns the [Stream] of [VideoEvent]s.
   @override
@@ -71,7 +73,6 @@ abstract class VideoElementPlayer implements VideoPlayer {
   @override
   void registerElement(int textureId) {
     _videoElement = createElement(textureId);
-
     // TODO(hterkelsen): Use initialization parameters once they are available
     ui.platformViewRegistry
         .registerViewFactory(_videoElement.id, (int viewId) => _videoElement);
@@ -80,6 +81,10 @@ abstract class VideoElementPlayer implements VideoPlayer {
   @protected
   void setupListeners() {
     videoElement.onCanPlay.listen((dynamic _) => markAsInitializedIfNeeded());
+    // it's not possible to programmatically use the canplay event reliably in Safari in iOS
+    if (isIPhone) {
+      videoElement.onLoadedMetadata.listen((_) => markAsInitializedIfNeeded());
+    }
 
     videoElement.onCanPlayThrough.listen((dynamic _) {
       setBuffering(false);

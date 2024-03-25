@@ -26,7 +26,8 @@ Future<dynamic> loadScriptUsingRequireJS(String packageName, String url) async {
   final Completer completer = Completer();
   final String eventName = '_${packageName}Loaded';
 
-  context.callMethod('addEventListener', [eventName, allowInterop((_) => completer.complete())]);
+  context.callMethod('addEventListener',
+      [eventName, allowInterop((_) => completer.complete())]);
 
   html.ScriptElement script = html.ScriptElement()
     ..type = 'text/javascript'
